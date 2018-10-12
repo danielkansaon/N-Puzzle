@@ -93,7 +93,7 @@ def main():
     #Variaveis locais
     passos_para_soluacao = 0
     achou_solucao = False
-    movimentos_possiveis = deque()
+    movimentos_possiveis_vertbrancos = deque()
 
     if(os.path.exists(name_file_in) == False):
         print('O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
@@ -107,20 +107,20 @@ def main():
             
             while (achou_solucao == False):
                 passos_para_soluacao += 1
-                movimentos_possiveis = []
+                movimentos_possiveis_vertbrancos = []
 
                 while (movimentos_fazer.empty() == False):
                     movimento = movimentos_fazer.get()                
-                    movimentos_possiveis = merge_queue(movimentos_possiveis, possibilidades_acoes(movimento, movimentos_ja_feitos))
+                    movimentos_possiveis_vertbrancos = merge_queue(movimentos_possiveis_vertbrancos, possibilidades_acoes(movimento, movimentos_ja_feitos))
                     adicionar_movimento_ja_feito(movimento)
             
                 print('EXECUTANDO PASSO: ' + str(passos_para_soluacao))
                 print('Ainda em execução...')
 
-                movimentos_possiveis.reverse()
+                movimentos_possiveis_vertbrancos.reverse()
                                 
-                while(movimentos_possiveis):
-                    m = movimentos_possiveis.pop()
+                while(movimentos_possiveis_vertbrancos):
+                    m = movimentos_possiveis_vertbrancos.pop()
                     
                     if(m == SOLUCAO_NPUZZLE):
                         achou_solucao = True
