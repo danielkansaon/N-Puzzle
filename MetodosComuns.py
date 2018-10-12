@@ -1,5 +1,5 @@
 # import queue
-# import Constantes as const
+import Constantes as const
 # import os.path
 # from collections import deque
 

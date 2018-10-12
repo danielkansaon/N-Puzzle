@@ -2,12 +2,14 @@ import os.path
 import queue
 from collections import deque
 
+#CONSTANTES
 name_file_in = 'in'
 name_file_out = 'out'
 vetor_movimentos_possiveis_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
-movimentos_ja_feitos = []
-movimentos_fazer = queue.Queue()
+movimentos_ja_feitos_vertpretos = []
+movimentos_fazer_vertcinzas = queue.Queue()
 SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
+#CONSTANTES
 
 #Obtem todos os movimentos possiveis
     #param: estado atual
@@ -59,78 +61,103 @@ def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matr
         
         return False
 
+#Similar a comparação se o vertice está PRETO no BFS
 def verificar_se_movimento_ja_feito(movimento):
-    if(movimentos_ja_feitos.__contains__(movimento)):
+    if(movimentos_ja_feitos_vertpretos.__contains__(movimento)):
         return True
     return False
 
+#Similar a coloração do vertice de PRETO no BFS
 def adicionar_movimento_ja_feito(movimento):     
     if( (movimento == SOLUCAO_NPUZZLE) == False):
-        movimentos_ja_feitos.append(movimento)
+        movimentos_ja_feitos_vertpretos.append(movimento)
    
     print(movimento)
 
-def merge_queue(q1, q2):
+def merge_list_queue(lista, queue):
     nova_queue = deque()
-    q1.reverse()
+    lista.reverse()
 
-    while(q1):
-        nova_queue.append(q1.pop())       
-    while(q2.empty() == False):
-        elemento = q2.get()
+    while(lista):
+        nova_queue.append(lista.pop())       
+    while(queue.empty() == False):
+        elemento = queue.get()
         if(nova_queue.__contains__(elemento) == False):
             nova_queue.append(elemento)
             
     return nova_queue
 
-def salvar_resultado(custo):
-   file = open(name_file_out,'w') 
-   file.write('Custo Total: ' + str(custo))
-   file.close()
+def ler_input():
+    try:
+        if(os.path.exists(name_file_in) == False):
+            print('O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
+        else:
+            file_object = open(name_file_in, 'r')  
+            return file_object.readline() 
+        return ''
+    except FileNotFoundError:
+        print('Arquivo [in] não encontrado no diretório')
+        return ''
+
+def salvar_resultado_out(custo):
+    try:
+        file = open(name_file_out,'w') 
+        file.write('Custo Total: ' + str(custo))
+        file.close()
+    except: 
+        print('Houve um erro ao salvar o arquivo [out] no diretório')   
 
 def main():
-
     #Variaveis locais
     passos_para_soluacao = 0
     achou_solucao = False
+    tem_solucao = True
     movimentos_possiveis_vertbrancos = deque()
+    #Variaveis locais
 
-    if(os.path.exists(name_file_in) == False):
-        print('O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
-    else: 
-        file_object = open(name_file_in, 'r')  
-        movimento_raiz = file_object.readline()       
-
-        if( (movimento_raiz == SOLUCAO_NPUZZLE) == False):
-
-            movimentos_fazer.put(movimento_raiz)                
+    movimento_raiz = ler_input()
+    
+    if(movimento_raiz != ''):   
+        if((movimento_raiz == SOLUCAO_NPUZZLE) == False):
+            movimentos_fazer_vertcinzas.put(movimento_raiz)                
             
-            while (achou_solucao == False):
+            while ((tem_solucao == True) and (achou_solucao == False)):
                 passos_para_soluacao += 1
                 movimentos_possiveis_vertbrancos = []
 
-                while (movimentos_fazer.empty() == False):
-                    movimento = movimentos_fazer.get()                
-                    movimentos_possiveis_vertbrancos = merge_queue(movimentos_possiveis_vertbrancos, possibilidades_acoes(movimento, movimentos_ja_feitos))
+                while (movimentos_fazer_vertcinzas.empty() == False):
+                    movimento = movimentos_fazer_vertcinzas.get()                
+                    movimentos_possiveis_vertbrancos = merge_list_queue(movimentos_possiveis_vertbrancos, possibilidades_acoes(movimento, movimentos_ja_feitos_vertpretos))
                     adicionar_movimento_ja_feito(movimento)
             
                 print('EXECUTANDO PASSO: ' + str(passos_para_soluacao))
                 print('Ainda em execução...')
-
                 movimentos_possiveis_vertbrancos.reverse()
-                                
+
+                if(movimentos_possiveis_vertbrancos == False):
+                    tem_solucao = False
+                    break
+
                 while(movimentos_possiveis_vertbrancos):
                     m = movimentos_possiveis_vertbrancos.pop()
                     
                     if(m == SOLUCAO_NPUZZLE):
                         achou_solucao = True
                         break   
-
                     if(verificar_se_movimento_ja_feito(m) == False):
-                        movimentos_fazer.put(m)
-    print('FIM')  
-    print('------------------------------------------------------------------------------------')         
-    print('NÚMERO DE PASSOS NECESSÁRIOS PARA SOLUÇÃO DO N-PUZZLE: ' + str(passos_para_soluacao))
+                        movimentos_fazer_vertcinzas.put(m)    
+        print('FIM')  
+        print('------------------------------------------------------------------------------------')
+
+        if(tem_solucao == True):
+            salvar_resultado_out(passos_para_soluacao)
+            print('NÚMERO DE PASSOS NECESSÁRIOS PARA SOLUÇÃO DO N-PUZZLE: ' + str(passos_para_soluacao))
+        else:
+            salvar_resultado_out(0)
+            print('NÃO FOI POSSÍVEL ENCONTRAR SOLUÇÃO PARA O N-PUZZLE')
+    else:
+        print('FIM')  
+        print('------------------------------------------------------------------------------------')
 
 if __name__ == "__main__":
     main()
