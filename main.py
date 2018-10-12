@@ -1,17 +1,19 @@
-
 import os.path
 import queue
+from collections import deque
 
 name_file_in = 'in'
 name_file_out = 'out'
 vetor_movimentos_possiveis_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
 movimentos_ja_feitos = []
 movimentos_fazer = queue.Queue()
-solucao = '1,2,3,4,5,6,7,8,0'
+SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
 
-def possibilidades_acoes(param):    
-    print(param)
-    lista_possibilidades = []
+#Obtem todos os movimentos possiveis
+    #param: estado atual
+    #excecao: movimentos que já não são permitidos
+def possibilidades_acoes(param, excecao):
+    queue_movimentos_possiveis = queue.Queue()
     posicao_valor_zero = 0
     param_split = param.split(',')
     
@@ -36,13 +38,12 @@ def possibilidades_acoes(param):
                 conteudo_x = vetor_param_split[posicao_valor_zero]
                 conteudo_y = vetor_param_split[posicao_valor_zero + (v)]
                 vetor_param_split[posicao_valor_zero] = conteudo_y.replace('\n','').replace('\t','')
-                vetor_param_split[posicao_valor_zero + (v)] = conteudo_x.replace('\n','').replace('\t','')
-                lista_possibilidades.append(','.join(vetor_param_split))
+                vetor_param_split[posicao_valor_zero + (v)] = conteudo_x.replace('\n','').replace('\t','')   
+                movimento = (','.join(vetor_param_split))
+                if(excecao.__contains__(movimento) == False):
+                    queue_movimentos_possiveis.put(movimento)
 
-    for p in lista_possibilidades:
-         print(p)
-
-    return lista_possibilidades
+    return queue_movimentos_possiveis
 
 #Valida se é possível fazer os movimentos laterais, ou seja, mexer a peça para esquerda ou para direita
 def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matriz):
@@ -58,43 +59,79 @@ def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matr
         
         return False
 
-def movimento_ja_feito(movimento):
+def verificar_se_movimento_ja_feito(movimento):
     for m in movimentos_ja_feitos:
         if(m == movimento):
             return True
     return False
 
+def adicionar_movimento_ja_feito(movimento):     
+    if( (movimento == SOLUCAO_NPUZZLE) == False):
+        movimentos_ja_feitos.append(movimento)
+   
+    print(movimento)
+
+def merge_queue(q1, q2):
+    nova_queue = deque()
+    q1.reverse()
+
+    while(q1):
+        nova_queue.append(q1.pop())       
+    while(q2.empty() == False):
+        elemento = q2.get()
+        if(nova_queue.__contains__(elemento) == False):
+            nova_queue.append(elemento)
+            
+    return nova_queue
+
+def salvar_resultado(custo):
+   file = open(name_file_out,'w') 
+   file.write('Custo Total: ' + str(custo))
+   file.close()
 
 def main():
-    count = 0
-    solucao = False
+
+    #Variaveis locais
+    passos_para_soluacao = 0
+    achou_solucao = False
+    movimentos_possiveis = deque()
 
     if(os.path.exists(name_file_in) == False):
         print('O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
     else: 
         file_object = open(name_file_in, 'r')  
-        movimentos_possiveis = possibilidades_acoes(file_object.readline())
+        movimento_raiz = file_object.readline()       
 
-        for m in movimentos_possiveis:
-            if(movimento_ja_feito(m) == False):
-                movimentos_fazer.put(m)
-                
-        movimentos_possiveis = []
+        if( (movimento_raiz == SOLUCAO_NPUZZLE) == False):
 
-        while (solucao == False):
-            while (movimentos_fazer.empty() == False):
-                movimentos_possiveis = possibilidades_acoes(movimentos_fazer.get())
+            movimentos_fazer.put(movimento_raiz)                
             
-            for m in movimentos_possiveis:    
-                if(m == solucao):
-                    solucao = True
-                    break   
+            while (achou_solucao == False):
+                passos_para_soluacao += 1
+                movimentos_possiveis = []
 
-                if(movimento_ja_feito(m) == False):
-                    movimentos_fazer.put(m)
+                while (movimentos_fazer.empty() == False):
+                    movimento = movimentos_fazer.get()                
+                    movimentos_possiveis = merge_queue(movimentos_possiveis, possibilidades_acoes(movimento, movimentos_ja_feitos))
+                    adicionar_movimento_ja_feito(movimento)
+            
+                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao))
+                print('Ainda em execução...')
 
-            count += 1
+                movimentos_possiveis.reverse()
+                                
+                while(movimentos_possiveis):
+                    m = movimentos_possiveis.pop()
+                    
+                    if(m == SOLUCAO_NPUZZLE):
+                        achou_solucao = True
+                        break   
+
+                    if(verificar_se_movimento_ja_feito(m) == False):
+                        movimentos_fazer.put(m)
+    print('FIM')  
+    print('------------------------------------------------------------------------------------')         
+    print('NÚMERO DE PASSOS NECESSÁRIOS PARA SOLUÇÃO DO N-PUZZLE: ' + str(passos_para_soluacao))
 
 if __name__ == "__main__":
     main()
-
