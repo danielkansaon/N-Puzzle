@@ -14,7 +14,7 @@ SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
 #Obtem todos os movimentos possiveis
     #param: estado atual
     #excecao: movimentos que já não são permitidos
-def possibilidades_acoes(param, excecao):
+def retornar_acoes_possiveis(param, excecao):
     queue_movimentos_possiveis = queue.Queue()
     posicao_valor_zero = 0
     param_split = param.split(',')
@@ -83,8 +83,7 @@ def merge_list_queue(lista, queue):
     while(queue.empty() == False):
         elemento = queue.get()
         if(nova_queue.__contains__(elemento) == False):
-            nova_queue.append(elemento)
-            
+            nova_queue.append(elemento)            
     return nova_queue
 
 def ler_input():
@@ -113,6 +112,7 @@ def main():
     achou_solucao = False
     tem_solucao = True
     movimentos_possiveis_vertbrancos = deque()
+    movimentos_possiveis_aux = deque()
     #Variaveis locais
 
     movimento_raiz = ler_input()
@@ -125,9 +125,11 @@ def main():
                 passos_para_soluacao += 1
                 movimentos_possiveis_vertbrancos = []
 
+                #Obtem os próximos movimentos a serem feitos
                 while (movimentos_fazer_vertcinzas.empty() == False):
                     movimento = movimentos_fazer_vertcinzas.get()                
-                    movimentos_possiveis_vertbrancos = merge_list_queue(movimentos_possiveis_vertbrancos, possibilidades_acoes(movimento, movimentos_ja_feitos_vertpretos))
+                    movimentos_possiveis_vertbrancos = merge_list_queue(movimentos_possiveis_vertbrancos,
+                    retornar_acoes_possiveis(movimento, movimentos_ja_feitos_vertpretos))
                     adicionar_movimento_ja_feito(movimento)
             
                 print('EXECUTANDO PASSO: ' + str(passos_para_soluacao))
@@ -138,6 +140,7 @@ def main():
                     tem_solucao = False
                     break
 
+                #Verifica se os movimentos [verticies brancos] são a solução do N-Puzzle
                 while(movimentos_possiveis_vertbrancos):
                     m = movimentos_possiveis_vertbrancos.pop()
                     
@@ -145,7 +148,7 @@ def main():
                         achou_solucao = True
                         break   
                     if(verificar_se_movimento_ja_feito(m) == False):
-                        movimentos_fazer_vertcinzas.put(m)    
+                        movimentos_fazer_vertcinzas.put(m)
         print('FIM')  
         print('------------------------------------------------------------------------------------')
 
