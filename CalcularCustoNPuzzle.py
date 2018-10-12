@@ -60,9 +60,8 @@ def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matr
         return False
 
 def verificar_se_movimento_ja_feito(movimento):
-    for m in movimentos_ja_feitos:
-        if(m == movimento):
-            return True
+    if(movimentos_ja_feitos.__contains__(movimento)):
+        return True
     return False
 
 def adicionar_movimento_ja_feito(movimento):     
