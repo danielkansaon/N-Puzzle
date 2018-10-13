@@ -11,8 +11,8 @@ SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
 #CONSTANTES
 
 #Obtem todos os movimentos possiveis
-    #param: estado atual
-    #excecao: movimentos que já não são permitidos
+#param: estado atual
+#excecao: movimentos que já não são permitidos
 def retornar_acoes_possiveis(param, excecao):
     queue_movimentos_possiveis = deque()
     posicao_valor_zero = 0
@@ -68,7 +68,7 @@ def verificar_se_movimento_ja_feito(movimento):
 
 #Similar a coloração do vertice de PRETO no BFS
 def adicionar_movimento_ja_feito(movimento):     
-    if( (movimento == SOLUCAO_NPUZZLE) == False):
+    if((movimento == SOLUCAO_NPUZZLE) == False):
         movimentos_ja_feitos_vertpretos.append(movimento)
 
 def merge_list_queue(queue1, queue2):
@@ -133,7 +133,7 @@ def salvar_resultado_out(custo):
 
 def main():
     #Variaveis locais
-    passos_para_soluacao = -1
+    passos_para_soluacao = 0
     achou_solucao = False
     tem_solucao = True
     movimentos_possiveis_vertbrancos = deque()
@@ -150,29 +150,29 @@ def main():
 
             while ((tem_solucao == True) and (achou_solucao == False)):
                 print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1))
-                print('Ainda em execução...')
-                passos_para_soluacao += 1
+                print('Ainda em execução...')                
                 
                 movimentos_possiveis_vertbrancos = movimentos_possiveis_aux.copy()
                 movimentos_possiveis_aux = []
 
-                if(movimentos_possiveis_vertbrancos == False):
+                if(movimentos_possiveis_vertbrancos == False): #Is empty
                     tem_solucao = False
                     break
-
+               
                 #Verifica se os movimentos [verticies brancos] são a solução, se não, visitam os vertices adjacentes
                 while(movimentos_possiveis_vertbrancos):
                     m = movimentos_possiveis_vertbrancos.popleft()
                     
-                    if(m == SOLUCAO_NPUZZLE):
-                        achou_solucao = True
-                        print(m)
-                        break   
-
                     if(verificar_se_movimento_ja_feito(m) == False):
                         movimentos_possiveis_aux = merge_list_queue(movimentos_possiveis_aux, retornar_acoes_possiveis(m, movimentos_ja_feitos_vertpretos))
                         adicionar_movimento_ja_feito(m) #Adiciona os vertices de cor Preta
                         print("OPÇÃO PASSO " + str(passos_para_soluacao) + ': ' + m)
+                                
+                if(movimentos_possiveis_aux.__contains__(SOLUCAO_NPUZZLE)): #Verifica se a solução já foi encontrada
+                    achou_solucao = True
+                    print(SOLUCAO_NPUZZLE)
+
+                passos_para_soluacao += 1
         else:
             passos_para_soluacao = 0
 
@@ -189,7 +189,7 @@ def main():
         print('------------------------------------------------------------------------------------')    
         print('FIM')   
 
-    print("Tempo Gasto: " + str(time.time() - start))
+    print("Tempo Gasto (seg): " + str(time.time() - start))
 
 if __name__ == "__main__":
     main()
