@@ -3,11 +3,11 @@ import time
 from collections import deque
 
 #CONSTANTES
-name_file_in = 'in'
-name_file_out = 'out'
-vetor_movimentos_possiveis_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
-movimentos_ja_feitos_vertpretos = []
+NAME_FILE_IN = 'in'
+NAME_FILE_OUT = 'out'
+VETOR_MOVIMENTOS_POSSIVEIS_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
 SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
+movimentos_ja_feitos_vertpretos = []
 #CONSTANTES
 
 #Obtem todos os movimentos possiveis
@@ -24,7 +24,7 @@ def retornar_acoes_possiveis(param, excecao):
             break
         posicao_valor_zero += 1
         
-    for v in vetor_movimentos_possiveis_3x3:
+    for v in VETOR_MOVIMENTOS_POSSIVEIS_3x3:
         vetor_param_split = param_split.copy()
         movimentos_validos = True
 
@@ -108,10 +108,10 @@ def validar_input(param):
 
 def ler_input():
     try:
-        if(os.path.exists(name_file_in) == False):
+        if(os.path.exists(NAME_FILE_IN) == False):
             print('MSG: O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
         else:
-            file_object = open(name_file_in, 'r')  
+            file_object = open(NAME_FILE_IN, 'r')  
             line = file_object.readline().replace('\n','').replace('\t','').replace(' ','')
             
             if(validar_input(line)):
@@ -125,7 +125,7 @@ def ler_input():
 
 def salvar_resultado_out(custo):
     try:
-        file = open(name_file_out,'w') 
+        file = open(NAME_FILE_OUT,'w') 
         file.write('Custo Total: ' + str(custo))
         file.close()
     except: 
