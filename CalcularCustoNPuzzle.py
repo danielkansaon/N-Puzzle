@@ -1,5 +1,5 @@
 import os.path
-import queue
+import time
 from collections import deque
 
 #CONSTANTES
@@ -7,7 +7,6 @@ name_file_in = 'in'
 name_file_out = 'out'
 vetor_movimentos_possiveis_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
 movimentos_ja_feitos_vertpretos = []
-movimentos_fazer_vertcinzas = queue.Queue()
 SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
 #CONSTANTES
 
@@ -15,7 +14,7 @@ SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
     #param: estado atual
     #excecao: movimentos que já não são permitidos
 def retornar_acoes_possiveis(param, excecao):
-    queue_movimentos_possiveis = queue.Queue()
+    queue_movimentos_possiveis = deque()
     posicao_valor_zero = 0
     param_split = param.split(',')
     
@@ -39,11 +38,11 @@ def retornar_acoes_possiveis(param, excecao):
             if(movimentos_validos == True):
                 conteudo_x = vetor_param_split[posicao_valor_zero]
                 conteudo_y = vetor_param_split[posicao_valor_zero + (v)]
-                vetor_param_split[posicao_valor_zero] = conteudo_y.replace('\n','').replace('\t','')
-                vetor_param_split[posicao_valor_zero + (v)] = conteudo_x.replace('\n','').replace('\t','')   
+                vetor_param_split[posicao_valor_zero] = conteudo_y.replace('\n','').replace('\t','').replace(' ','')
+                vetor_param_split[posicao_valor_zero + (v)] = conteudo_x.replace('\n','').replace('\t','').replace(' ','')   
                 movimento = (','.join(vetor_param_split))
                 if(excecao.__contains__(movimento) == False):
-                    queue_movimentos_possiveis.put(movimento)
+                    queue_movimentos_possiveis.append(movimento)
 
     return queue_movimentos_possiveis
 
@@ -71,31 +70,57 @@ def verificar_se_movimento_ja_feito(movimento):
 def adicionar_movimento_ja_feito(movimento):     
     if( (movimento == SOLUCAO_NPUZZLE) == False):
         movimentos_ja_feitos_vertpretos.append(movimento)
-   
-    print(movimento)
 
-def merge_list_queue(lista, queue):
+def merge_list_queue(queue1, queue2):
     nova_queue = deque()
-    lista.reverse()
 
-    while(lista):
-        nova_queue.append(lista.pop())       
-    while(queue.empty() == False):
-        elemento = queue.get()
+    while(queue1):
+            nova_queue.append(queue1.popleft())
+    while(queue2):
+        elemento = queue2.popleft()
         if(nova_queue.__contains__(elemento) == False):
-            nova_queue.append(elemento)            
+            nova_queue.append(elemento)
+      
     return nova_queue
+
+def validar_input(param):
+    param_split = param.split(',')
+    lista_elementos = []
+    try:
+        if(len(param_split) == 9):
+            for p in param_split:
+                if(p == '' or ((int(p) >= 0 and int(p) <= 8) == False) or (lista_elementos.__contains__(p) == True)):            
+                    return False
+                else:
+                    lista_elementos.append(p)
+            return True
+        if(len(param_split) == 16):
+            for p in param_split:
+                if(p == '' or ((int(p) >= 0 and int(p) <= 15) == False) or (lista_elementos.__contains__(p) == True)):            
+                    return False
+                else:
+                    lista_elementos.append(p)
+            return True
+    except ValueError:    
+        return False
+    
+    return False
 
 def ler_input():
     try:
         if(os.path.exists(name_file_in) == False):
-            print('O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
+            print('MSG: O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
         else:
             file_object = open(name_file_in, 'r')  
-            return file_object.readline() 
+            line = file_object.readline().replace('\n','').replace('\t','').replace(' ','')
+            
+            if(validar_input(line)):
+                return line 
+
+        print('MSG: O ARQUIVO DE ENTRADA ESTÁ INCORRETO, VERFIQUE PARA CONTINUAR')        
         return ''
     except FileNotFoundError:
-        print('Arquivo [in] não encontrado no diretório')
+        print('MSG: Arquivo [in] não encontrado no diretório')
         return ''
 
 def salvar_resultado_out(custo):
@@ -104,51 +129,53 @@ def salvar_resultado_out(custo):
         file.write('Custo Total: ' + str(custo))
         file.close()
     except: 
-        print('Houve um erro ao salvar o arquivo [out] no diretório')   
+        print('MSG: Houve um erro ao salvar o arquivo [out] no diretório')   
 
 def main():
     #Variaveis locais
-    passos_para_soluacao = 0
+    passos_para_soluacao = -1
     achou_solucao = False
     tem_solucao = True
     movimentos_possiveis_vertbrancos = deque()
     movimentos_possiveis_aux = deque()
     #Variaveis locais
 
+    start = time.time()
+    time.clock()
     movimento_raiz = ler_input()
     
     if(movimento_raiz != ''):   
         if((movimento_raiz == SOLUCAO_NPUZZLE) == False):
-            movimentos_fazer_vertcinzas.put(movimento_raiz)                
-            
-            while ((tem_solucao == True) and (achou_solucao == False)):
-                passos_para_soluacao += 1
-                movimentos_possiveis_vertbrancos = []
+            movimentos_possiveis_aux.append(movimento_raiz)     
 
-                #Obtem os próximos movimentos a serem feitos
-                while (movimentos_fazer_vertcinzas.empty() == False):
-                    movimento = movimentos_fazer_vertcinzas.get()                
-                    movimentos_possiveis_vertbrancos = merge_list_queue(movimentos_possiveis_vertbrancos,
-                    retornar_acoes_possiveis(movimento, movimentos_ja_feitos_vertpretos))
-                    adicionar_movimento_ja_feito(movimento)
-            
-                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao))
+            while ((tem_solucao == True) and (achou_solucao == False)):
+                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1))
                 print('Ainda em execução...')
-                movimentos_possiveis_vertbrancos.reverse()
+                passos_para_soluacao += 1
+                
+                movimentos_possiveis_vertbrancos = movimentos_possiveis_aux.copy()
+                movimentos_possiveis_aux = []
 
                 if(movimentos_possiveis_vertbrancos == False):
                     tem_solucao = False
                     break
 
-                #Verifica se os movimentos [verticies brancos] são a solução do N-Puzzle
+                #Verifica se os movimentos [verticies brancos] são a solução, se não, visitam os vertices adjacentes
                 while(movimentos_possiveis_vertbrancos):
-                    m = movimentos_possiveis_vertbrancos.pop()
+                    m = movimentos_possiveis_vertbrancos.popleft()
                     
                     if(m == SOLUCAO_NPUZZLE):
                         achou_solucao = True
+                        print(m)
                         break   
+
                     if(verificar_se_movimento_ja_feito(m) == False):
-                        movimentos_fazer_vertcinzas.put(m)
+                        movimentos_possiveis_aux = merge_list_queue(movimentos_possiveis_aux, retornar_acoes_possiveis(m, movimentos_ja_feitos_vertpretos))
+                        adicionar_movimento_ja_feito(m) #Adiciona os vertices de cor Preta
+                        print("OPÇÃO PASSO " + str(passos_para_soluacao) + ': ' + m)
+        else:
+            passos_para_soluacao = 0
+
         print('FIM')  
         print('------------------------------------------------------------------------------------')
 
@@ -158,9 +185,11 @@ def main():
         else:
             salvar_resultado_out(0)
             print('NÃO FOI POSSÍVEL ENCONTRAR SOLUÇÃO PARA O N-PUZZLE')
-    else:
-        print('FIM')  
-        print('------------------------------------------------------------------------------------')
+    else:        
+        print('------------------------------------------------------------------------------------')    
+        print('FIM')   
+
+    print("Tempo Gasto: " + str(time.time() - start))
 
 if __name__ == "__main__":
     main()
