@@ -1,7 +1,7 @@
-import os.path
-import sys
-import time
 from collections import deque
+import os.path
+import time
+import sys
 
 #CONSTANTES
 VETOR_MOVIMENTOS_POSSIVEIS_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
@@ -9,9 +9,7 @@ SOLUCAO_NPUZZLE_3x3 = '0,1,2,3,4,5,6,7,8'
 movimentos_ja_feitos_vertpretos = set()
 #CONSTANTES
 
-#Obtem todos os movimentos possiveis
-#param: estado atual
-#excecao: movimentos que já não são permitidos
+#Obtem todos os movimentos possiveis. [queue] fila para adicionar os movimentos; [param]: estado atual; [excecao]: movimentos que já não são permitidos
 def retornar_acoes_possiveis(queue, param, excecao):
     posicao_valor_zero = 0
     param_split = param.split(',')
@@ -130,7 +128,7 @@ def main():
             print('------------------------------------------------------------------------------')
             
             while (movimentos_possiveis_vertbrancos and (achou_solucao == False)): 
-                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1) + ' - QTD NÓS: ' + str(len(movimentos_possiveis_vertbrancos)) , end='\r')
+                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1) + ' - QTD NOS: ' + str(len(movimentos_possiveis_vertbrancos)) , end='\r')
                                               
                 while(movimentos_possiveis_vertbrancos): #Obtêm os vértices ADJACENTES dos vertices da Fila                    
                     mov = movimentos_possiveis_vertbrancos.popleft()
@@ -138,7 +136,6 @@ def main():
                     if(verificar_se_movimento_ja_feito(mov) == False):
                         movimentos_possiveis_aux = retornar_acoes_possiveis(movimentos_possiveis_aux, mov, movimentos_ja_feitos_vertpretos)
                         adicionar_movimento_ja_feito(mov) #Adiciona os vertices JÁ visitados [Cor Preta]
-                        # print("OPÇÃO PASSO " + str(passos_para_soluacao) + ': ' + mov)   
 
                 passos_para_soluacao += 1
                 movimentos_possiveis_vertbrancos = movimentos_possiveis_aux.copy()#Adiciona os vertices adjacentes na FILA 
@@ -146,15 +143,15 @@ def main():
 
                 if(movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE_3x3)):
                     achou_solucao = True
-                    print('SOLUÇÃO: ' + SOLUCAO_NPUZZLE_3x3)                   
+                    print('SOLUCAO: ' + SOLUCAO_NPUZZLE_3x3)                   
      
         print('------------------------------------------------------------------------------')
         if(achou_solucao == True):
             salvar_resultado_out(sys.argv[2], passos_para_soluacao)
-            print('NÚMERO DE PASSOS NECESSÁRIOS PARA SOLUÇÃO DO N-PUZZLE: ' + str(passos_para_soluacao))
+            print('NUMERO DE PASSOS NECESSARIOS PARA SOLUCAO DO N-PUZZLE: ' + str(passos_para_soluacao))
         else:
             salvar_resultado_out(sys.argv[2], 0)
-            print('NÃO FOI POSSÍVEL ENCONTRAR SOLUÇÃO PARA O N-PUZZLE')
+            print('NAO FOI POSSÍVEL ENCONTRAR SOLUCAO PARA O N-PUZZLE')
     
     print("Tempo Gasto (seg): " + str(time.time() - start))
 
