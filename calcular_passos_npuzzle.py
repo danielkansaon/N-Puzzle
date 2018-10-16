@@ -92,13 +92,15 @@ def validar_input(param):
 
 def ler_input(caminho):    
         if(os.path.exists(caminho) == False):
-            print('MSG: O ARQUIVO DE ENTRADA NÃO EXISTE NO CAMINHO INFORMADO: ' + caminho)            
+            print('MSG: O ARQUIVO DE ENTRADA NAO EXISTE NO CAMINHO INFORMADO: ' + caminho)            
         else:
             file_object = open(caminho, 'r')  
             line = file_object.readline().replace('\n','').replace('\t','').replace(' ','')
             
             if(validar_input(line)):
-                return line        
+                return line
+            else:
+                print('MSG: O ARQUIVO DE ENTRADA ['+ caminho + '] NÃO E VALIDO')     
         return ''
 
 def salvar_resultado_out(caminho, resultado):
@@ -109,50 +111,63 @@ def salvar_resultado_out(caminho, resultado):
     except: 
         print('MSG: Houve um erro ao salvar o arquivo [out] no diretório')   
 
-def main():        
-    #Variaveis locais
+def calcular_passos(raiz):
     passos_para_soluacao = 0
-    achou_solucao = True
-    movimentos_possiveis_vertbrancos = deque()
-    movimentos_possiveis_aux = deque()
-    #Variaveis locais
+    Queue_movimentos_possiveis_vertbrancos = deque()
+    Queue_movimentos_possiveis_aux = deque()
+    achou_solucao = False
 
-    start = time.time()
-    time.clock()
-    movimento_raiz = ler_input(sys.argv[1])
-    
-    if(movimento_raiz != ''):   
-        if((movimento_raiz == SOLUCAO_NPUZZLE_3x3) == False): #Verifica se a entrada já é a solução
-            movimentos_possiveis_vertbrancos.append(movimento_raiz)     
-            achou_solucao = False
-            print('------------------------------------------------------------------------------')
+    if((raiz == SOLUCAO_NPUZZLE_3x3) == False): #Verifica se a entrada já é a solução
+        Queue_movimentos_possiveis_vertbrancos.append(raiz)     
+        # print('------------------------------------------------------------------------------')
             
-            while (movimentos_possiveis_vertbrancos and (achou_solucao == False)): 
-                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1) + ' - QTD NOS: ' + str(len(movimentos_possiveis_vertbrancos)) , end='\r')
+        while (Queue_movimentos_possiveis_vertbrancos and achou_solucao == False): #is not empty
+            print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1) + ' - QTD NOS: ' + str(len(movimentos_ja_feitos_vertpretos)) , end='\r')
                                               
-                while(movimentos_possiveis_vertbrancos): #Obtêm os vértices ADJACENTES dos vertices da Fila                    
-                    mov = movimentos_possiveis_vertbrancos.popleft()
+            while(Queue_movimentos_possiveis_vertbrancos): #Obtêm os vértices ADJACENTES dos vertices da Fila                    
+                mov = Queue_movimentos_possiveis_vertbrancos.popleft()
                     
-                    if(verificar_se_movimento_ja_feito(mov) == False):
-                        movimentos_possiveis_aux = retornar_acoes_possiveis(movimentos_possiveis_aux, mov, movimentos_ja_feitos_vertpretos)
-                        adicionar_movimento_ja_feito(mov) #Adiciona os vertices JÁ visitados [Cor Preta]
+                if(verificar_se_movimento_ja_feito(mov) == False):
+                    Queue_movimentos_possiveis_aux = retornar_acoes_possiveis(Queue_movimentos_possiveis_aux, mov, movimentos_ja_feitos_vertpretos)
+                    adicionar_movimento_ja_feito(mov) #Adiciona os vertices JÁ visitados [Cor Preta]
 
-                passos_para_soluacao += 1
-                movimentos_possiveis_vertbrancos = movimentos_possiveis_aux.copy()#Adiciona os vertices adjacentes na FILA 
-                movimentos_possiveis_aux = deque()
+            passos_para_soluacao += 1
+            Queue_movimentos_possiveis_vertbrancos = Queue_movimentos_possiveis_aux.copy()#Adiciona os vertices adjacentes na FILA 
+            Queue_movimentos_possiveis_aux = deque()
 
-                if(movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE_3x3)):
-                    achou_solucao = True
-                    print('SOLUCAO: ' + SOLUCAO_NPUZZLE_3x3)                   
-     
+            if(Queue_movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE_3x3)): #Verificando se achou a solução
+                achou_solucao = True
+                break
+    else:
+        achou_solucao = True
+
+    print('QUANTIDADE DE NOS(POSSIBILIDADES) VISITADOS: ' + str(len(movimentos_ja_feitos_vertpretos)), end='\n')
+
+    if(achou_solucao == True):
+        return passos_para_soluacao
+    else:
+        return -1 #Não tem solução
+
+def main():        
+    #VARIAVEIS
+    raiz = ler_input(sys.argv[1])
+    start = time.time()
+    time.clock()    
+    #VARIAVEIS
+
+    if(raiz != ''):
+        passos_para_soluacao = calcular_passos(raiz) #Calcula o numero de passos para a solução
+
         print('------------------------------------------------------------------------------')
-        if(achou_solucao == True):
+        if(passos_para_soluacao >= 0):
             salvar_resultado_out(sys.argv[2], passos_para_soluacao)
             print('NUMERO DE PASSOS NECESSARIOS PARA SOLUCAO DO N-PUZZLE: ' + str(passos_para_soluacao))
         else:
-            salvar_resultado_out(sys.argv[2], 0)
-            print('NAO FOI POSSÍVEL ENCONTRAR SOLUCAO PARA O N-PUZZLE')
-    
+            salvar_resultado_out(sys.argv[2], -1)
+            print('NAO FOI POSSIVEL ENCONTRAR SOLUCAO PARA O N-PUZZLE')
+    else:
+        print('------------------------------------------------------------------------------')
+
     print("Tempo Gasto (seg): " + str(time.time() - start))
 
 if __name__ == "__main__":
