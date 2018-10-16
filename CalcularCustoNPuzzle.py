@@ -1,20 +1,18 @@
 import os.path
+import sys
 import time
 from collections import deque
 
 #CONSTANTES
-NAME_FILE_IN = 'in'
-NAME_FILE_OUT = 'out'
 VETOR_MOVIMENTOS_POSSIVEIS_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
-SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
-movimentos_ja_feitos_vertpretos = []
+SOLUCAO_NPUZZLE_3x3 = '0,1,2,3,4,5,6,7,8'
+movimentos_ja_feitos_vertpretos = set()
 #CONSTANTES
 
 #Obtem todos os movimentos possiveis
 #param: estado atual
 #excecao: movimentos que já não são permitidos
-def retornar_acoes_possiveis(param, excecao):
-    queue_movimentos_possiveis = deque()
+def retornar_acoes_possiveis(queue, param, excecao):
     posicao_valor_zero = 0
     param_split = param.split(',')
     
@@ -41,11 +39,11 @@ def retornar_acoes_possiveis(param, excecao):
                 vetor_param_split[posicao_valor_zero] = conteudo_y.replace('\n','').replace('\t','').replace(' ','')
                 vetor_param_split[posicao_valor_zero + (v)] = conteudo_x.replace('\n','').replace('\t','').replace(' ','')   
                 movimento = (','.join(vetor_param_split))
-                if(excecao.__contains__(movimento) == False):
-                    queue_movimentos_possiveis.append(movimento)
+                if(verificar_se_movimento_ja_feito(movimento) == False):
+                    queue.append(movimento)      
 
-    return queue_movimentos_possiveis
-
+    return queue
+    
 #Valida se é possível fazer os movimentos laterais, ou seja, mexer a peça para esquerda ou para direita
 def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matriz):
     resultado = posicao_zero + (operacao)
@@ -62,26 +60,14 @@ def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matr
 
 #Similar a comparação se o vertice está PRETO no BFS
 def verificar_se_movimento_ja_feito(movimento):
-    if(movimentos_ja_feitos_vertpretos.__contains__(movimento)):
+    if(movimento in movimentos_ja_feitos_vertpretos):
         return True
     return False
 
 #Similar a coloração do vertice de PRETO no BFS
 def adicionar_movimento_ja_feito(movimento):     
-    if((movimento == SOLUCAO_NPUZZLE) == False):
-        movimentos_ja_feitos_vertpretos.append(movimento)
-
-def merge_list_queue(queue1, queue2):
-    nova_queue = deque()
-
-    while(queue1):
-            nova_queue.append(queue1.popleft())
-    while(queue2):
-        elemento = queue2.popleft()
-        if(nova_queue.__contains__(elemento) == False):
-            nova_queue.append(elemento)
-      
-    return nova_queue
+    if((movimento == SOLUCAO_NPUZZLE_3x3) == False):
+        movimentos_ja_feitos_vertpretos.add(movimento)
 
 def validar_input(param):
     param_split = param.split(',')
@@ -106,89 +92,70 @@ def validar_input(param):
     
     return False
 
-def ler_input():
-    try:
-        if(os.path.exists(NAME_FILE_IN) == False):
-            print('MSG: O arquivo [in] não existe no diretório, por favor crie o arquivo e tente novamente.')
+def ler_input(caminho):    
+        if(os.path.exists(caminho) == False):
+            print('MSG: O ARQUIVO DE ENTRADA NÃO EXISTE NO CAMINHO INFORMADO: ' + caminho)            
         else:
-            file_object = open(NAME_FILE_IN, 'r')  
+            file_object = open(caminho, 'r')  
             line = file_object.readline().replace('\n','').replace('\t','').replace(' ','')
             
             if(validar_input(line)):
-                return line 
-
-        print('MSG: O ARQUIVO DE ENTRADA ESTÁ INCORRETO, VERFIQUE PARA CONTINUAR')        
-        return ''
-    except FileNotFoundError:
-        print('MSG: Arquivo [in] não encontrado no diretório')
+                return line        
         return ''
 
-def salvar_resultado_out(custo):
+def salvar_resultado_out(caminho, resultado):
     try:
-        file = open(NAME_FILE_OUT,'w') 
-        file.write('Custo Total: ' + str(custo))
+        file = open(caminho,'w') 
+        file.write('Custo Total: ' + str(resultado))
         file.close()
     except: 
         print('MSG: Houve um erro ao salvar o arquivo [out] no diretório')   
 
-def main():
+def main():        
     #Variaveis locais
     passos_para_soluacao = 0
-    achou_solucao = False
-    tem_solucao = True
+    achou_solucao = True
     movimentos_possiveis_vertbrancos = deque()
     movimentos_possiveis_aux = deque()
     #Variaveis locais
 
     start = time.time()
     time.clock()
-    movimento_raiz = ler_input()
+    movimento_raiz = ler_input(sys.argv[1])
     
     if(movimento_raiz != ''):   
-        if((movimento_raiz == SOLUCAO_NPUZZLE) == False):
-            movimentos_possiveis_aux.append(movimento_raiz)     
-
-            while ((tem_solucao == True) and (achou_solucao == False)):
-                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1))
-                print('Ainda em execução...')                
-                
-                movimentos_possiveis_vertbrancos = movimentos_possiveis_aux.copy()
-                movimentos_possiveis_aux = []
-
-                if(movimentos_possiveis_vertbrancos == False): #Is empty
-                    tem_solucao = False
-                    break
-               
-                #Verifica se os movimentos [verticies brancos] são a solução, se não, visitam os vertices adjacentes
-                while(movimentos_possiveis_vertbrancos):
-                    m = movimentos_possiveis_vertbrancos.popleft()
+        if((movimento_raiz == SOLUCAO_NPUZZLE_3x3) == False): #Verifica se a entrada já é a solução
+            movimentos_possiveis_vertbrancos.append(movimento_raiz)     
+            achou_solucao = False
+            print('------------------------------------------------------------------------------')
+            
+            while (movimentos_possiveis_vertbrancos and (achou_solucao == False)): 
+                print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1) + ' - QTD NÓS: ' + str(len(movimentos_possiveis_vertbrancos)) , end='\r')
+                                              
+                while(movimentos_possiveis_vertbrancos): #Obtêm os vértices ADJACENTES dos vertices da Fila                    
+                    mov = movimentos_possiveis_vertbrancos.popleft()
                     
-                    if(verificar_se_movimento_ja_feito(m) == False):
-                        movimentos_possiveis_aux = merge_list_queue(movimentos_possiveis_aux, retornar_acoes_possiveis(m, movimentos_ja_feitos_vertpretos))
-                        adicionar_movimento_ja_feito(m) #Adiciona os vertices de cor Preta
-                        print("OPÇÃO PASSO " + str(passos_para_soluacao) + ': ' + m)
-                                
-                if(movimentos_possiveis_aux.__contains__(SOLUCAO_NPUZZLE)): #Verifica se a solução já foi encontrada
-                    achou_solucao = True
-                    print(SOLUCAO_NPUZZLE)
+                    if(verificar_se_movimento_ja_feito(mov) == False):
+                        movimentos_possiveis_aux = retornar_acoes_possiveis(movimentos_possiveis_aux, mov, movimentos_ja_feitos_vertpretos)
+                        adicionar_movimento_ja_feito(mov) #Adiciona os vertices JÁ visitados [Cor Preta]
+                        # print("OPÇÃO PASSO " + str(passos_para_soluacao) + ': ' + mov)   
 
                 passos_para_soluacao += 1
-        else:
-            passos_para_soluacao = 0
+                movimentos_possiveis_vertbrancos = movimentos_possiveis_aux.copy()#Adiciona os vertices adjacentes na FILA 
+                movimentos_possiveis_aux = deque()
 
-        print('FIM')  
-        print('------------------------------------------------------------------------------------')
-
-        if(tem_solucao == True):
-            salvar_resultado_out(passos_para_soluacao)
+                if(movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE_3x3)):
+                    achou_solucao = True
+                    print('SOLUÇÃO: ' + SOLUCAO_NPUZZLE_3x3)                   
+     
+        print('------------------------------------------------------------------------------')
+        if(achou_solucao == True):
+            salvar_resultado_out(sys.argv[2], passos_para_soluacao)
             print('NÚMERO DE PASSOS NECESSÁRIOS PARA SOLUÇÃO DO N-PUZZLE: ' + str(passos_para_soluacao))
         else:
-            salvar_resultado_out(0)
+            salvar_resultado_out(sys.argv[2], 0)
             print('NÃO FOI POSSÍVEL ENCONTRAR SOLUÇÃO PARA O N-PUZZLE')
-    else:        
-        print('------------------------------------------------------------------------------------')    
-        print('FIM')   
-
+    
     print("Tempo Gasto (seg): " + str(time.time() - start))
 
 if __name__ == "__main__":
