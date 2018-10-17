@@ -4,10 +4,10 @@ import time
 import sys
 
 #CONSTANTES
-VETOR_MOVIMENTOS_POSSIVEIS = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
-SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
 TAMANHO_PUZZLE = 3
+SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
 movimentos_ja_feitos_vertpretos = set()
+VETOR_MOVIMENTOS_POSSIVEIS = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
 #CONSTANTES
 
 #Obtem todos os movimentos possiveis. [queue] fila para adicionar os movimentos; [param]: estado atual; [excecao]: movimentos que já não são permitidos
@@ -198,4 +198,3 @@ def main():
     
 if __name__ == "__main__":   
     main()
-
