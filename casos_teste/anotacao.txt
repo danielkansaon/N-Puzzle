@@ -1,0 +1,11 @@
+start = time.time()
+time.clock()  
+print("Memory (MB): " + str(process.memory_info().vms / 1000000))
+print("Tamanho lista vertices pretos: " + str(sys.getsizeof(movimentos_ja_feitos_vertpretos)))    
+print("Tempo Gasto (seg): " + str(time.time() - start))             
+
+    # print("CPU %: " + str(process.cpu_percent(interval=0) / psutil.cpu_count()))
+    # print('Maximum memory usage: %s' % max(mem_usage))  
+    #  mem_usage = memory_usage(proc=os.getpid())
+    # print('Memory usage (in chunks of .1 seconds): %s' % mem_usage)  
+    # print("Tamanho lista vertices pretos: " + str(sys.getsizeof(movimentos_ja_feitos_vertpretos))) #memory bytes lista  

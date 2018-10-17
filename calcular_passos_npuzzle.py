@@ -1,15 +1,12 @@
-import psutil
 from collections import deque
 import os.path
 import time
 import sys
-# from memory_profiler import memory_usage 
-from time import sleep
-
 
 #CONSTANTES
-VETOR_MOVIMENTOS_POSSIVEIS_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
-SOLUCAO_NPUZZLE_3x3 = '0,1,2,3,4,5,6,7,8'
+VETOR_MOVIMENTOS_POSSIVEIS = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
+SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
+TAMANHO_PUZZLE = 3
 movimentos_ja_feitos_vertpretos = set()
 #CONSTANTES
 
@@ -23,16 +20,16 @@ def retornar_acoes_possiveis(queue, param, excecao):
         if(p == '0'):
             break
         posicao_valor_zero += 1
-        
-    for v in VETOR_MOVIMENTOS_POSSIVEIS_3x3:
+    
+    for v in VETOR_MOVIMENTOS_POSSIVEIS:
         vetor_param_split = param_split.copy()
         movimentos_validos = True
-
-        if(posicao_valor_zero + (v) >= 0 and posicao_valor_zero + (v) <= 8):
+        
+        if(posicao_valor_zero + (v) >= 0 and posicao_valor_zero + (v) <= (TAMANHO_PUZZLE * TAMANHO_PUZZLE) - 1):
             
             #Verifica se o movimento a ser feito é lateral
             if(v == (1) or v == (-1)) :
-               movimentos_validos = validar_possibilidade_movimento_lateral(posicao_valor_zero, v, 3)
+               movimentos_validos = validar_possibilidade_movimento_lateral(posicao_valor_zero, v, TAMANHO_PUZZLE)
 
             #Adiciona a nova possibiidade de movimento    
             if(movimentos_validos == True):
@@ -57,8 +54,16 @@ def validar_possibilidade_movimento_lateral(posicao_zero, operacao, tamanho_matr
             return True
         if((posicao_zero >= 6 and posicao_zero <= 8) and (resultado >= 6 and resultado <= 8)):
             return True
-        
-        return False
+    else: # Jogo com Matriz 4X4
+        if(posicao_zero <= 3 and resultado <= 3):
+            return True
+        if((posicao_zero >= 4 and posicao_zero <= 7) and (resultado >= 4 and resultado <= 7)):
+            return True
+        if((posicao_zero >= 8 and posicao_zero <= 11) and (resultado >= 8 and resultado <= 11)):
+            return True
+        if((posicao_zero >= 12 and posicao_zero <= 15) and (resultado >= 12 and resultado <= 15)):
+            return True
+    return False
 
 #Similar a comparação se o vertice está PRETO no BFS
 def verificar_se_movimento_ja_feito(movimento):
@@ -68,12 +73,13 @@ def verificar_se_movimento_ja_feito(movimento):
 
 #Similar a coloração do vertice de PRETO no BFS
 def adicionar_movimento_ja_feito(movimento):     
-    if((movimento == SOLUCAO_NPUZZLE_3x3) == False):
+    if((movimento == SOLUCAO_NPUZZLE) == False):
         movimentos_ja_feitos_vertpretos.add(movimento)
 
 def validar_input(param):
     param_split = param.split(',')
     lista_elementos = []
+    
     try:
         if(len(param_split) == 9):
             for p in param_split:
@@ -94,6 +100,20 @@ def validar_input(param):
     
     return False
 
+def config_ambiente(tamanho):
+    global SOLUCAO_NPUZZLE
+    global VETOR_MOVIMENTOS_POSSIVEIS
+    global TAMANHO_PUZZLE
+
+    if(tamanho == 9):
+        SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8'
+        VETOR_MOVIMENTOS_POSSIVEIS = [-3, 3, -1, 1]
+        TAMANHO_PUZZLE = 3
+    else:
+        SOLUCAO_NPUZZLE = '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15'
+        VETOR_MOVIMENTOS_POSSIVEIS = [-4, 4, -1, 1]
+        TAMANHO_PUZZLE = 4
+
 def ler_input(caminho):    
         if(os.path.exists(caminho) == False):
             print('MSG: O ARQUIVO DE ENTRADA NAO EXISTE NO CAMINHO INFORMADO: ' + caminho)            
@@ -102,6 +122,7 @@ def ler_input(caminho):
             line = file_object.readline().replace('\n','').replace('\t','').replace(' ','')
             
             if(validar_input(line)):
+                config_ambiente(len(line.split(',')))
                 return line
             else:
                 print('MSG: O ARQUIVO DE ENTRADA ['+ caminho + '] NÃO E VALIDO')     
@@ -121,7 +142,7 @@ def calcular_passos(raiz):
     num_vertices_adjacentes = 0
     Queue_movimentos_possiveis_vertbrancos = deque()    
     
-    if((raiz == SOLUCAO_NPUZZLE_3x3) == False):
+    if((raiz == SOLUCAO_NPUZZLE) == False):
         Queue_movimentos_possiveis_vertbrancos.append(raiz)     
         print('------------------------------------------------------------------------------')
             
@@ -139,7 +160,7 @@ def calcular_passos(raiz):
                 num_vertices_adjacentes += -1
             
             passos_para_soluacao += 1
-            if(Queue_movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE_3x3)): #Verificando se achou a solução
+            if(Queue_movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE)): #Verificando se achou a solução
                 achou_solucao = True
                 break
     else:
@@ -157,10 +178,7 @@ def main():
     raiz = ler_input(sys.argv[1])
     start = time.time()
     time.clock()  
-    process = psutil.Process(os.getpid())  
     #VARIAVEIS   
-
-    # process.cpu_percent(interval=1)
 
     if(raiz != ''):
         passos_para_soluacao = calcular_passos(raiz) #Calcula o numero de passos para a solução
@@ -168,6 +186,7 @@ def main():
         print('------------------------------------------------------------------------------')
         if(passos_para_soluacao >= 0):
             salvar_resultado_out(sys.argv[2], passos_para_soluacao)
+            print('SOLUCAO: ' + SOLUCAO_NPUZZLE)
             print('SOLUCAO: NUMERO DE PASSOS NECESSARIOS PARA SOLUCAO DO N-PUZZLE: ' + str(passos_para_soluacao))
         else:
             salvar_resultado_out(sys.argv[2], -1)
@@ -175,15 +194,7 @@ def main():
     else:
         print('------------------------------------------------------------------------------')
 
-    print("Memory (MB): " + str(process.memory_info().vms / 1000000))
-    print("Tamanho lista vertices pretos: " + str(sys.getsizeof(movimentos_ja_feitos_vertpretos)))
-    # print("CPU %: " + str(process.cpu_percent(interval=0) / psutil.cpu_count()))
     print("Tempo Gasto (seg): " + str(time.time() - start))             
-
-    # print('Maximum memory usage: %s' % max(mem_usage))  
-    #  mem_usage = memory_usage(proc=os.getpid())
-    # print('Memory usage (in chunks of .1 seconds): %s' % mem_usage)  
-    # print("Tamanho lista vertices pretos: " + str(sys.getsizeof(movimentos_ja_feitos_vertpretos))) #memory bytes lista  
     
 if __name__ == "__main__":   
     main()
