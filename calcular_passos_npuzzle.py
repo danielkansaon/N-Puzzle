@@ -1,7 +1,11 @@
+import psutil
 from collections import deque
 import os.path
 import time
 import sys
+# from memory_profiler import memory_usage 
+from time import sleep
+
 
 #CONSTANTES
 VETOR_MOVIMENTOS_POSSIVEIS_3x3 = [-3, 3, -1, 1] #Movimentos possíveis em uma jogada. Ordem [Baixo, Cima, Esquerda, Direita].
@@ -112,29 +116,29 @@ def salvar_resultado_out(caminho, resultado):
         print('MSG: Houve um erro ao salvar o arquivo [out] no diretório')   
 
 def calcular_passos(raiz):
-    passos_para_soluacao = 0
-    Queue_movimentos_possiveis_vertbrancos = deque()
-    Queue_movimentos_possiveis_aux = deque()
     achou_solucao = False
-
-    if((raiz == SOLUCAO_NPUZZLE_3x3) == False): #Verifica se a entrada já é a solução
+    passos_para_soluacao = 0
+    num_vertices_adjacentes = 0
+    Queue_movimentos_possiveis_vertbrancos = deque()    
+    
+    if((raiz == SOLUCAO_NPUZZLE_3x3) == False):
         Queue_movimentos_possiveis_vertbrancos.append(raiz)     
-        # print('------------------------------------------------------------------------------')
+        print('------------------------------------------------------------------------------')
             
         while (Queue_movimentos_possiveis_vertbrancos and achou_solucao == False): #is not empty
             print('EXECUTANDO PASSO: ' + str(passos_para_soluacao + 1) + ' - QTD NOS: ' + str(len(movimentos_ja_feitos_vertpretos)) , end='\r')
-                                              
-            while(Queue_movimentos_possiveis_vertbrancos): #Obtêm os vértices ADJACENTES dos vertices da Fila                    
+            num_vertices_adjacentes = len(Queue_movimentos_possiveis_vertbrancos) #Contador para saber qts nos adjacentes visitar
+
+            while(Queue_movimentos_possiveis_vertbrancos and num_vertices_adjacentes > 0): #Obtêm os vértices ADJACENTES dos vertices da Fila                    
                 mov = Queue_movimentos_possiveis_vertbrancos.popleft()
-                    
+                
                 if(verificar_se_movimento_ja_feito(mov) == False):
-                    Queue_movimentos_possiveis_aux = retornar_acoes_possiveis(Queue_movimentos_possiveis_aux, mov, movimentos_ja_feitos_vertpretos)
+                    Queue_movimentos_possiveis_vertbrancos = retornar_acoes_possiveis(Queue_movimentos_possiveis_vertbrancos, mov, movimentos_ja_feitos_vertpretos)
                     adicionar_movimento_ja_feito(mov) #Adiciona os vertices JÁ visitados [Cor Preta]
-
+                
+                num_vertices_adjacentes += -1
+            
             passos_para_soluacao += 1
-            Queue_movimentos_possiveis_vertbrancos = Queue_movimentos_possiveis_aux.copy()#Adiciona os vertices adjacentes na FILA 
-            Queue_movimentos_possiveis_aux = deque()
-
             if(Queue_movimentos_possiveis_vertbrancos.__contains__(SOLUCAO_NPUZZLE_3x3)): #Verificando se achou a solução
                 achou_solucao = True
                 break
@@ -142,18 +146,21 @@ def calcular_passos(raiz):
         achou_solucao = True
 
     print('QUANTIDADE DE NOS(POSSIBILIDADES) VISITADOS: ' + str(len(movimentos_ja_feitos_vertpretos)), end='\n')
-
+    
     if(achou_solucao == True):
         return passos_para_soluacao
     else:
         return -1 #Não tem solução
 
-def main():        
+def main():           
     #VARIAVEIS
     raiz = ler_input(sys.argv[1])
     start = time.time()
-    time.clock()    
-    #VARIAVEIS
+    time.clock()  
+    process = psutil.Process(os.getpid())  
+    #VARIAVEIS   
+
+    # process.cpu_percent(interval=1)
 
     if(raiz != ''):
         passos_para_soluacao = calcular_passos(raiz) #Calcula o numero de passos para a solução
@@ -161,14 +168,23 @@ def main():
         print('------------------------------------------------------------------------------')
         if(passos_para_soluacao >= 0):
             salvar_resultado_out(sys.argv[2], passos_para_soluacao)
-            print('NUMERO DE PASSOS NECESSARIOS PARA SOLUCAO DO N-PUZZLE: ' + str(passos_para_soluacao))
+            print('SOLUCAO: NUMERO DE PASSOS NECESSARIOS PARA SOLUCAO DO N-PUZZLE: ' + str(passos_para_soluacao))
         else:
             salvar_resultado_out(sys.argv[2], -1)
-            print('NAO FOI POSSIVEL ENCONTRAR SOLUCAO PARA O N-PUZZLE')
+            print('SOLUCAO: NAO FOI POSSIVEL ENCONTRAR SOLUCAO PARA O N-PUZZLE')
     else:
         print('------------------------------------------------------------------------------')
 
-    print("Tempo Gasto (seg): " + str(time.time() - start))
+    print("Memory (MB): " + str(process.memory_info().vms / 1000000))
+    print("Tamanho lista vertices pretos: " + str(sys.getsizeof(movimentos_ja_feitos_vertpretos)))
+    # print("CPU %: " + str(process.cpu_percent(interval=0) / psutil.cpu_count()))
+    print("Tempo Gasto (seg): " + str(time.time() - start))             
 
-if __name__ == "__main__":
+    # print('Maximum memory usage: %s' % max(mem_usage))  
+    #  mem_usage = memory_usage(proc=os.getpid())
+    # print('Memory usage (in chunks of .1 seconds): %s' % mem_usage)  
+    # print("Tamanho lista vertices pretos: " + str(sys.getsizeof(movimentos_ja_feitos_vertpretos))) #memory bytes lista  
+    
+if __name__ == "__main__":   
     main()
+
